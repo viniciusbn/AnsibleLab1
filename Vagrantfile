@@ -21,11 +21,22 @@ Vagrant.configure("2") do |config|
     ansible.vm.network "private_network", ip: "192.168.20.10"
     ansible.vm.synced_folder "./configs", "/configs"
     ansible.vm.provision "shell", inline: $script_ansyble
-    ansible.vm.provision "shell", inline: "cat /configs/id_bionic.pub >> .ssh/authorized_keys"
+    ansible.vm.provision "shell", inline: "cat /configs/ssl/id_bionic.pub >> .ssh/authorized_keys"
     ansible.vm.provision "shell",
-      inline: "cp /configs/id_bionic /home/vagrant && \
+      inline: "cp /configs/ssl/id_bionic /home/vagrant && \
               chmod 600 /home/vagrant/id_bionic && \
               chown vagrant:vagrant /home/vagrant/id_bionic"
     #ansible.vm.provision "shell", inline: "ansible-playbook -i /configs/ansible/hosts /configs/ansible/playbook.yml"
+  end
+
+  config.vm.define "wordpress" do |wordpress|
+    wordpress.vm.provider "virtualbox" do |virtualbox|
+      #virtualbox.memory = 1024
+      #virtualbox.cpus = 2
+      virtualbox.name = "wordpress"
+    end
+    wordpress.vm.network "private_network", ip: "192.168.20.20"
+    wordpress.vm.synced_folder "./configs", "/configs"
+    wordpress.vm.provision "shell", inline: "cat /configs/ssl/id_bionic.pub >> .ssh/authorized_keys"
   end
 end
