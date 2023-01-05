@@ -1,4 +1,20 @@
 ---
 - hosts: all
+  become: yes
   tasks:
-    - shell: 'echo Hello World!! > /vagrant/hello.txt'
+    - name: 'Update APT database'
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+    - name: 'Install PHP'
+      apt: 
+        name: php
+        state: latest
+    - name: 'Install apache2'
+      apt: 
+        name: apache2
+        state: latest
+    - name: 'Install libapache2-mod-php'
+      apt: 
+        name: libapache2-mod-php
+        state: latest
