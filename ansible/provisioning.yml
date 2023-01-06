@@ -34,3 +34,13 @@
       become: yes
       tags:
         - create_db
+    - name: Create database user with password and wordpress_db database privileges
+      community.mysql.mysql_user:
+        name: wordpress_user
+        password: 12345
+        priv: 'wordpress_db.*:ALL'
+        state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
+      become: yes
+      tags:
+        - create_user
