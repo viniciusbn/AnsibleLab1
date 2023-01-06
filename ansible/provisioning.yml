@@ -4,8 +4,10 @@
     - name: 'Update APT database'
       apt:
         update_cache: yes
-        cache_valid_time: 3600
+        cache_valid_time: 43200
       become: yes
+      tags:
+        - apt_update_cache
     - name: 'Install system packages dependencies'
       apt: 
         name: "{{ item }}"
@@ -16,6 +18,19 @@
         - apache2
         - libapache2-mod-php
         - php-gd
+        - php-ssh2
         - mysql-server
         - python-mysqldb
+        - python-pymysql
+        - python3-pymysql
         - php-mysql
+      tags:
+        - install_packages
+    - name: 'Create database'
+      community.mysql.mysql_db:
+        name: wordpress_db
+        state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
+      become: yes
+      tags:
+        - create_db
