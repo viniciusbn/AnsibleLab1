@@ -1,5 +1,11 @@
 ---
 - hosts: all
+  handlers:
+    - name: 'restart_apache'
+      ansible.builtin.service:
+        name: apache2
+        state: restarted
+      become: yes
   tasks:
     - name: 'Update APT database'
       apt:
@@ -68,5 +74,13 @@
         - { regex: 'database_name_here', value: 'wordpress_db' }
         - { regex: 'username_here', value: 'wordpress_user' }
         - { regex: 'password_here', value: '12345' }
-      tags: [ set_wp_variables ]
+      tags: [ set_wp_variables, one_time ]
       become: yes
+    - name: 'Copy apache configuration for wordpress'
+      ansible.builtin.copy:
+        src: /vagrant/files/000-default.conf
+        dest: /etc/apache2/sites-available/000-default.conf
+      become: yes
+      notify:
+        - restart_apache
+      tags: [ cp_apache_config, one_time ]
