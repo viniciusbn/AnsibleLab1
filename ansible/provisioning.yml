@@ -57,7 +57,7 @@
         - { regex: 'database_name_here', value: 'wordpress_db' }
         - { regex: 'username_here', value: 'wordpress_user' }
         - { regex: 'password_here', value: '12345' }
-        - { regex: 'DB_HOST', value: '192.168.20.30' }
+        - { regex: 'localhost', value: '192.168.20.30' }
       tags: [ set_wp_variables, one_time ]
       become: yes
     - name: 'Copy apache configuration for wordpress'
@@ -70,6 +70,12 @@
       tags: [ cp_apache_config, one_time ]
 
 - hosts: wordpress_db
+  handlers:
+    - name: 'restart_mysql'
+      ansible.builtin.service:
+        name: mysql
+        state: restarted
+      become: yes
   tasks:
     - name: 'Update APT database'
       apt:
@@ -101,6 +107,22 @@
         password: 12345
         priv: 'wordpress_db.*:ALL'
         state: present
-        login_unix_socket: /run/mysqld/mysqld.sock
+        host: "{{ item }}"
+        login_unix_socket: /run/mysqld/mysqld.sock        
+      with_items:
+        - 'localhost'
+        - '127.0.0.1'
+        - '192.168.20.20'
       become: yes
       tags: [ create_user, one_time ]
+    - name: 'Allow MySQL access from remote source'
+      ansible.builtin.replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: "{{ item.regex }}"
+        replace: "{{ item.value }}"
+      with_items:
+        - { regex: '127.0.0.1', value: '0.0.0.0' }
+      notify:
+        - restart_mysql
+      tags: [ allow_db_remote, one_time ]
+      become: yes
