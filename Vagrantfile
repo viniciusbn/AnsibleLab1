@@ -29,14 +29,25 @@ Vagrant.configure("2") do |config|
     #ansible.vm.provision "shell", inline: "ansible-playbook -i /configs/ansible/hosts /configs/ansible/playbook.yml"
   end
 
-  config.vm.define "wordpress" do |wordpress|
-    wordpress.vm.provider "virtualbox" do |virtualbox|
+  config.vm.define "wordpress_web" do |wordpress_web|
+    wordpress_web.vm.provider "virtualbox" do |virtualbox|
       #virtualbox.memory = 1024
       #virtualbox.cpus = 2
-      virtualbox.name = "wordpress"
+      virtualbox.name = "wordpress_web"
     end
-    wordpress.vm.network "private_network", ip: "192.168.20.20"
-    wordpress.vm.synced_folder "./configs", "/configs"
-    wordpress.vm.provision "shell", inline: "cat /configs/ssl/id_bionic.pub >> .ssh/authorized_keys"
+    wordpress_web.vm.network "private_network", ip: "192.168.20.20"
+    wordpress_web.vm.synced_folder "./configs", "/configs"
+    wordpress_web.vm.provision "shell", inline: "cat /configs/ssl/id_bionic.pub >> .ssh/authorized_keys"
+  end
+  
+  config.vm.define "wordpress_db" do |wordpress_db|
+    wordpress_db.vm.provider "virtualbox" do |virtualbox|
+      #virtualbox.memory = 1024
+      #virtualbox.cpus = 2
+      virtualbox.name = "wordpress_db"
+    end
+    wordpress_db.vm.network "private_network", ip: "192.168.20.30"
+    wordpress_db.vm.synced_folder "./configs", "/configs"
+    wordpress_db.vm.provision "shell", inline: "cat /configs/ssl/id_bionic.pub >> .ssh/authorized_keys"
   end
 end
