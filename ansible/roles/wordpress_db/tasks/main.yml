@@ -1,0 +1,50 @@
+---
+- name: "Update APT database"
+  apt:
+    update_cache: yes
+    cache_valid_time: 43200
+  become: yes
+  tags: [apt_update_cache]
+- name: "Install system packages dependencies"
+  apt:
+    name: "{{ item }}"
+    state: latest
+  become: yes
+  with_items:
+    - python-mysqldb
+    - python-pymysql
+    - python3-pymysql
+    - mysql-server
+  tags: [install_packages, one_time]
+- name: "Create database"
+  community.mysql.mysql_db:
+    name: "{{ wp_db_name }}"
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+  become: yes
+  tags: [create_db, one_time]
+- name: Create database user with password and wordpress_db database privileges
+  community.mysql.mysql_user:
+    name: "{{ wp_db_user }}"
+    password: "{{ wp_db_pass }}"
+    priv: "{{ wp_db_name }}.*:ALL"
+    state: present
+    host: "{{ item }}"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  with_items:
+    - "localhost"
+    - "127.0.0.1"
+    - "{{ wp_host_ip }}"
+  become: yes
+  tags: [create_user, one_time]
+- name: "Allow MySQL access from remote source"
+  ansible.builtin.replace:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: "{{ item.regex }}"
+    replace: "{{ item.value }}"
+  with_items:
+    - { regex: "127.0.0.1", value: "0.0.0.0" }
+  notify:
+    - restart_mysql
+  tags: [allow_db_remote, one_time]
+  become: yes

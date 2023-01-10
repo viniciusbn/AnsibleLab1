@@ -1,0 +1,31 @@
+---
+- name: "Update APT database"
+  apt:
+    update_cache: yes
+    cache_valid_time: 43200
+  become: yes
+  tags: [apt_update_cache]
+- name: "Install system packages dependencies"
+  apt:
+    name: "{{ item }}"
+    state: latest
+  become: yes
+  with_items:
+    - php
+    - apache2
+    - libapache2-mod-php
+    - php-gd
+    - php-ssh2
+    - python-mysqldb
+    - python-pymysql
+    - python3-pymysql
+    - php-mysql
+  tags: [install_packages, one_time]
+- name: " Set apache template configuration "
+  template:
+    src: "/vagrant/ansible/roles/webserver/templates/000-default.conf.j2"
+    dest: "/etc/apache2/sites-available/000-default.conf"
+  become: yes
+  notify:
+    - restart_apache
+  tags: [set_apache_config, one_time]
